@@ -5,6 +5,7 @@ import ImageThumbnails from "@/components/ImageThumbnails";
 import LoginButton from "@/components/LoginButton";
 import withAuth from "@/HOC/withAuth";
 import { carSubmit } from "@/services/networkRequests";
+import axios from "axios";
 
 const SubmissionPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -86,13 +87,42 @@ const SubmissionPage = () => {
       !fileError
     ) {
       setError("");
+
+      const url = "https://api.cloudinary.com/v1_1/hzxyensd5/image/upload";
+      const imageform = new FormData();
+      let _temp = []
+      for (let i = 0; i < pictures.length; i++) {
+        imageform.append("file", pictures[i]);
+        imageform.append("upload_preset", "docs_upload_example_us_preset");
+        const imgRes:any = await axios.post(url, imageform)
+        console.log('imgRes', imgRes);
+        
+        _temp.push(imgRes.data.secure_url)
+        // fetch(url, {
+        //   method: "POST",
+        //   body: imageform,
+        // })
+        //   .then((response) => {
+        //     return response.text();
+        //   })
+        //   .then((data) => {
+        //     console.log("=========================data: ", data);
+        //     console.log("=========================data.secure_url: ", data.secure_url);
+        //   }).catch((err)=>{
+        //     console.log(err);
+            
+        //   }).finally(()=>{
+        //     setLoading(false);
+        //   })
+      }
+
       const formData = new FormData();
       formData.append("carModel", carModel);
       formData.append("price", price);
       formData.append("phoneNumber", phoneNumber);
       formData.append("city", city);
-      for (let i = 0; i < pictures.length; i++) {
-        formData.append("pictures", pictures[i]);
+      for (let i = 0; i < _temp.length; i++) {
+        formData.append("pictures", _temp[i]);
       }
       console.log("formdata", formData);
       try {
@@ -112,6 +142,7 @@ const SubmissionPage = () => {
       } finally {
         setLoading(false);
       }
+
     } else {
       setLoading(false);
       setError("Please fix all errors");
